@@ -1,3 +1,5 @@
+Both frontend and backend folders need 'npm install' on them
+
 Run 'npm start' on frontend folder
 Run 'nodemon server' on backend folder
 
