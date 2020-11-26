@@ -51,36 +51,23 @@ exports.getOneSauce = (req, res, next) => {
 };
 
 exports.modifySauce = (req, res, next) => {
-  const updatedSauce = JSON.parse(req.body.sauce);
-  const url = req.protocol + '://' + req.get('host');
-    const newSauce = {
-        ...updatedSauce,
-        // name: updatedSauce.name,
-    }
-
-    //if no new image is uploaded, I want to keep the old one. Can not figure this out!
-    let updatedUrl
     if (req.file) {
-      updatedUrl = url + '/images/' + req.file.filename
+        const updatedSauce = JSON.parse(req.body.sauce);
+        const url = req.protocol + '://' + req.get('host');
+        const updatedUrl = url + '/images/' + req.file.filename;
+        // fs.unlink('images/' + req.file.filename, (err) => {
+        //     if (err) throw err;
+        //     console.log('old image deleted');
+        // });
+        Sauce.findByIdAndUpdate({_id: req.params.id}, { $set: updatedSauce, imageUrl: updatedUrl}, {new: true})
+            .then(() => res.status(201).json({ message: 'Sauce updated successfully!'}))
+            .catch(error => res.status(400).json({ error }));
     } else {
-      updatedUrl = 'the old image'
+           const updatedSauce = {...req.body}
+        Sauce.updateOne({ _id: req.params.id }, { ...updatedSauce, _id: req.params.id })
+            .then(() => res.status(201).json({ message: 'Sauce updated successfully!'}))
+            .catch(error => res.status(400).json({ error }));
     }
-
-    Sauce.findByIdAndUpdate({_id: req.params.id}, { $set: updatedSauce, imageUrl: updatedUrl}, {new: true})
-        .then(
-            () => {
-                res.status(201).json({
-                    message: 'Sauce updated successfully!'
-                });
-            }
-        )
-        .catch(
-        (error) => {
-            res.status(400).json({
-                error: error
-            });
-        }
-    );
 }
 
 exports.deleteSauce = (req, res, next) => {
