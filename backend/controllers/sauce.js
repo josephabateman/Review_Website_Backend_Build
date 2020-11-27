@@ -51,52 +51,68 @@ exports.getOneSauce = (req, res, next) => {
 };
 
 // exports.modifySauce = (req, res, next) => {
+//     //if user chooses a new file, 1) use that new file, 2) add new user input to req.body and 3) delete old image
 //     if (req.file) {
+//         let oldFilename
+//         Sauce.findOne({_id: req.params.id}).then(
+//             (sauce) => {
+//                  oldFilename = sauce.imageUrl.split('/images/')[1];
+//                  console.log(oldFilename)
+//             }
+//         )
 //         const updatedSauce = JSON.parse(req.body.sauce);
 //         const url = req.protocol + '://' + req.get('host');
 //         const updatedUrl = url + '/images/' + req.file.filename;
-//         // fs.unlink('images/' + req.file.filename, (err) => {
-//         //     if (err) throw err;
-//         //     console.log('old image deleted');
-//         // });
-//         Sauce.findByIdAndUpdate({_id: req.params.id}, { $set: updatedSauce, imageUrl: updatedUrl}, {new: true})
-//             .then(() => res.status(201).json({ message: 'Sauce updated successfully!'}))
-//             .catch(error => res.status(400).json({ error }));
-//     } else {
-//            const updatedSauce = {...req.body}
+//         Sauce.findByIdAndUpdate({_id: req.params.id}, { $set: updatedSauce, imageUrl: updatedUrl}, {new: true}, () => {
+//             fs.unlink('images/' + oldFilename, (err) => {
+//                 if (err) throw err;
+//                 console.log('old image was deleted and replaced with new one');
+//                 res.status(201).json({ message: 'Sauce updated successfully!'})
+//             });
+//         })
+//     }
+//     // otherwise, just update req.body
+//     else {
+//         const updatedSauce = {...req.body}
 //         Sauce.updateOne({ _id: req.params.id }, { ...updatedSauce, _id: req.params.id })
 //             .then(() => res.status(201).json({ message: 'Sauce updated successfully!'}))
 //             .catch(error => res.status(400).json({ error }));
 //     }
-// 
+// }
 
 exports.modifySauce = (req, res, next) => {
+    //if user chooses a new file, 1) use that new file, 2) add new user input to req.body and 3) delete old image
+    let newSauce;
+    let oldFilename
+    let fileUpload = false
+
     if (req.file) {
-        let oldFilename
-        Sauce.findOne({_id: req.params.id}).then(
-            (sauce) => {
-                 oldFilename = sauce.imageUrl.split('/images/')[1];
-                 console.log(oldFilename)
-            }
-        )
+        fileUpload = true
 
-        const updatedSauce = JSON.parse(req.body.sauce);
+        //find old file to delete
+        Sauce.findOne({_id: req.params.id})
+            .then((sauce) => {oldFilename = sauce.imageUrl.split('/images/')[1];})
+
         const url = req.protocol + '://' + req.get('host');
-        const updatedUrl = url + '/images/' + req.file.filename;
-
-        Sauce.findByIdAndUpdate({_id: req.params.id}, { $set: updatedSauce, imageUrl: updatedUrl}, {new: true}, () => {
-            fs.unlink('images/' + oldFilename, (err) => {
-                if (err) throw err;
-                console.log('old image was deleted and replaced with new one');
-                res.status(201).json({ message: 'Sauce updated successfully!'})
-            });
-        })
-    } else {
-        const updatedSauce = {...req.body}
-        Sauce.updateOne({ _id: req.params.id }, { ...updatedSauce, _id: req.params.id })
-            .then(() => res.status(201).json({ message: 'Sauce updated successfully!'}))
-            .catch(error => res.status(400).json({ error }));
+        newSauce = {
+            ...JSON.parse(req.body.sauce),
+            imageUrl: url + '/images/' + req.file.filename
+        }
     }
+    // else, just update req.body
+    else {
+        newSauce = {...req.body}
+    }
+        Sauce.findByIdAndUpdate({_id: req.params.id}, { $set: newSauce}, {new: true}, () => {
+            if (fileUpload == true) {
+                fs.unlink('images/' + oldFilename, (err) => {
+                    if (err) throw err;
+                });
+                res.status(201).json({ message: 'Sauce info and image updated successfully!'})
+            } else {
+                res.status(201).json({ message: 'Sauce info updated successfully!'})
+            }
+        })
 }
 
 exports.deleteSauce = (req, res, next) => {
@@ -137,4 +153,50 @@ exports.getAllSauce = (req, res, next) => {
       });
     }
   );
+};
+
+exports.likeSauce = async (req, res, next) => {
+    try {
+        const foundSauce = await Sauce.findOne({
+            _id: req.params.id
+        });
+        const userId = req.body.userId;
+        const like = req.body.like;
+
+        // make sure usersLiked Array only contains one copy of userId or else not at all
+        if (like === 1) {
+            if (!foundSauce.usersLiked.includes(userId)) {
+                foundSauce.usersLiked.push(userId);
+            }
+        } else {
+            if (foundSauce.usersLiked.includes(userId)) {
+                const userIdIndex = foundSauce.usersLiked.indexOf(userId);
+                foundSauce.usersLiked.splice(userIdIndex);
+            }
+        }
+        // set likes to the number of usersLiked
+        foundSauce.likes = foundSauce.usersLiked.length;
+
+        // make sure usersDisliked Array only contains one copy of userId or else not at all
+        if (like === -1) {
+            if (!foundSauce.usersDisliked.includes(userId)) {
+                foundSauce.usersDisliked.push(userId);
+            }
+        } else {
+            if (foundSauce.usersDisliked.includes(userId)) {
+                const userIdIndex = foundSauce.usersDisliked.indexOf(userId);
+                foundSauce.usersDisliked.splice(userIdIndex);
+            }
+        }
+        // set dislikes to the number of usersDisliked
+        foundSauce.dislikes = foundSauce.usersDisliked.length;
+
+        foundSauce.save();
+        res.status(200).end();
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({
+            error
+        });
+    }
 };
