@@ -192,7 +192,9 @@ exports.likeSauce = async (req, res, next) => {
         foundSauce.dislikes = foundSauce.usersDisliked.length;
 
         foundSauce.save();
-        res.status(200).end();
+        res.status(200).json({
+            message: 'Form updated for likes/dislikes'
+        });
     } catch (error) {
         console.log(error);
         res.status(400).json({
