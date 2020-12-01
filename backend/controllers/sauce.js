@@ -2,13 +2,17 @@ const Sauce = require('../models/sauce');
 const fs = require('fs');
 const mongoose = require('mongoose');
 
-function isValidId(id) {
-    return mongoose.Types.ObjectId.isValid(id);
+//validation functions for req.params.id
+function isValid(id) {
+    if (id != '' && mongoose.Types.ObjectId.isValid(id)) {
+        return true
+    } else {
+        return false
+    }
 }
-
-function isNotEmpty(parameter) {
-    return parameter != '';
-}
+// function isNotEmpty(parameter) {
+//     return parameter != '';
+// }
 
 exports.createSauce = (req, res, next) => {
     const sauceObject = JSON.parse(req.body.sauce);
@@ -43,7 +47,7 @@ exports.createSauce = (req, res, next) => {
 
 exports.getOneSauce = (req, res, next) => {
     let sauceToFind
-    if (isNotEmpty(req.params.id) && isValidId(req.params.id)) {
+    if (isValid(req.params.id)) {
          sauceToFind = req.params.id
     }
   Sauce.findOne({
@@ -104,7 +108,7 @@ exports.modifySauce = (req, res, next) => {
 
         //find old file to delete
         let sauceToFind
-        if (isNotEmpty(req.params.id) && isValidId(req.params.id)) {
+        if (isValid(req.params.id)) {
             sauceToFind = req.params.id
         }
         Sauce.findOne({_id: sauceToFind})
@@ -122,7 +126,7 @@ exports.modifySauce = (req, res, next) => {
     }
 
     let sauceToFind
-    if (isNotEmpty(req.params.id) && isValidId(req.params.id)) {
+    if (isValid(req.params.id)) {
         sauceToFind = req.params.id
     }
         Sauce.findByIdAndUpdate({_id: sauceToFind}, { $set: newSauce}, {new: true}, () => {
@@ -139,7 +143,7 @@ exports.modifySauce = (req, res, next) => {
 
 exports.deleteSauce = (req, res, next) => {
     let sauceToFind
-    if (isNotEmpty(req.params.id) && isValidId(req.params.id)) {
+    if (isValid(req.params.id)) {
         sauceToFind = req.params.id
     }
     Sauce.findOne({_id: sauceToFind}).then(
@@ -184,7 +188,7 @@ exports.getAllSauce = (req, res, next) => {
 exports.likeSauce = async (req, res, next) => {
     try {
         let sauceToFind
-        if (isNotEmpty(req.params.id) && isValidId(req.params.id)) {
+        if (isValid(req.params.id)) {
             sauceToFind = req.params.id
         }
         const foundSauce = await Sauce.findOne({
