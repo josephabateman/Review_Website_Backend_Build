@@ -1,5 +1,14 @@
 const Sauce = require('../models/sauce');
 const fs = require('fs');
+const mongoose = require('mongoose');
+
+function isValidId(id) {
+    return mongoose.Types.ObjectId.isValid(id);
+}
+
+function isNotEmpty(parameter) {
+    return parameter != '';
+}
 
 exports.createSauce = (req, res, next) => {
     const sauceObject = JSON.parse(req.body.sauce);
@@ -33,8 +42,12 @@ exports.createSauce = (req, res, next) => {
 };
 
 exports.getOneSauce = (req, res, next) => {
+    let sauceToFind
+    if (isNotEmpty(req.params.id) && isValidId(req.params.id)) {
+         sauceToFind = req.params.id
+    }
   Sauce.findOne({
-    _id: req.params.id
+    _id: sauceToFind
   })
   .then(
     (sauce) => {
@@ -90,7 +103,11 @@ exports.modifySauce = (req, res, next) => {
         fileUpload = true
 
         //find old file to delete
-        Sauce.findOne({_id: req.params.id})
+        let sauceToFind
+        if (isNotEmpty(req.params.id) && isValidId(req.params.id)) {
+            sauceToFind = req.params.id
+        }
+        Sauce.findOne({_id: sauceToFind})
             .then((sauce) => {oldFilename = sauce.imageUrl.split('/images/')[1];})
 
         const url = req.protocol + '://' + req.get('host');
@@ -103,7 +120,12 @@ exports.modifySauce = (req, res, next) => {
     else {
         newSauce = {...req.body}
     }
-        Sauce.findByIdAndUpdate({_id: req.params.id}, { $set: newSauce}, {new: true}, () => {
+
+    let sauceToFind
+    if (isNotEmpty(req.params.id) && isValidId(req.params.id)) {
+        sauceToFind = req.params.id
+    }
+        Sauce.findByIdAndUpdate({_id: sauceToFind}, { $set: newSauce}, {new: true}, () => {
             if (fileUpload == true) {
                 fs.unlink('images/' + oldFilename, (err) => {
                     if (err) throw err;
@@ -116,7 +138,11 @@ exports.modifySauce = (req, res, next) => {
 }
 
 exports.deleteSauce = (req, res, next) => {
-    Sauce.findOne({_id: req.params.id}).then(
+    let sauceToFind
+    if (isNotEmpty(req.params.id) && isValidId(req.params.id)) {
+        sauceToFind = req.params.id
+    }
+    Sauce.findOne({_id: sauceToFind}).then(
         (sauce) => {
             const filename = sauce.imageUrl.split('/images/')[1];
             fs.unlink('images/' + filename, () => {
@@ -157,8 +183,12 @@ exports.getAllSauce = (req, res, next) => {
 
 exports.likeSauce = async (req, res, next) => {
     try {
+        let sauceToFind
+        if (isNotEmpty(req.params.id) && isValidId(req.params.id)) {
+            sauceToFind = req.params.id
+        }
         const foundSauce = await Sauce.findOne({
-            _id: req.params.id
+            _id: sauceToFind
         });
         const userId = req.body.userId;
         const like = req.body.like;
