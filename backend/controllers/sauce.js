@@ -1,20 +1,8 @@
 const Sauce = require('../models/sauce');
 const fs = require('fs');
-const mongoose = require('mongoose');
+const validationFunction = require('../customModules/validation.js');
 
-//validation functions for req.params.id
-function isValid(id) {
-    if (id != '' && mongoose.Types.ObjectId.isValid(id)) {
-        return true
-    } else {
-        return false
-    }
-}
-// function isNotEmpty(parameter) {
-//     return parameter != '';
-// }
-
-exports.createSauce = (req, res, next) => {
+exports.createSauce = (req, res) => {
     const sauceObject = JSON.parse(req.body.sauce);
     const url = req.protocol + '://' + req.get('host');
     const sauce = new Sauce({
@@ -45,9 +33,9 @@ exports.createSauce = (req, res, next) => {
     );
 };
 
-exports.getOneSauce = (req, res, next) => {
+exports.getOneSauce = (req, res) => {
     let sauceToFind
-    if (isValid(req.params.id)) {
+    if (validationFunction.isValid(req.params.id)) {
          sauceToFind = req.params.id
     }
   Sauce.findOne({
@@ -67,7 +55,7 @@ exports.getOneSauce = (req, res, next) => {
   );
 };
 
-// exports.modifySauce = (req, res, next) => {
+// exports.modifySauce = (req, res) => {
 //     //if user chooses a new file, 1) use that new file, 2) add new user input to req.body and 3) delete old image
 //     if (req.file) {
 //         let oldFilename
@@ -97,7 +85,7 @@ exports.getOneSauce = (req, res, next) => {
 //     }
 // }
 
-exports.modifySauce = (req, res, next) => {
+exports.modifySauce = (req, res) => {
     //if user chooses a new file, 1) use that new file, 2) add new user input to req.body and 3) delete old image
     let newSauce;
     let oldFilename
@@ -108,7 +96,7 @@ exports.modifySauce = (req, res, next) => {
 
         //find old file to delete
         let sauceToFind
-        if (isValid(req.params.id)) {
+        if (validationFunction.isValid(req.params.id)) {
             sauceToFind = req.params.id
         }
         Sauce.findOne({_id: sauceToFind})
@@ -126,11 +114,11 @@ exports.modifySauce = (req, res, next) => {
     }
 
     let sauceToFind
-    if (isValid(req.params.id)) {
+    if (validationFunction.isValid(req.params.id)) {
         sauceToFind = req.params.id
     }
         Sauce.findByIdAndUpdate({_id: sauceToFind}, { $set: newSauce}, {new: true}, () => {
-            if (fileUpload == true) {
+            if (fileUpload === true) {
                 fs.unlink('images/' + oldFilename, (err) => {
                     if (err) throw err;
                 });
@@ -141,9 +129,9 @@ exports.modifySauce = (req, res, next) => {
         })
 }
 
-exports.deleteSauce = (req, res, next) => {
+exports.deleteSauce = (req, res) => {
     let sauceToFind
-    if (isValid(req.params.id)) {
+    if (validationFunction.isValid(req.params.id)) {
         sauceToFind = req.params.id
     }
     Sauce.findOne({_id: sauceToFind}).then(
@@ -153,12 +141,12 @@ exports.deleteSauce = (req, res, next) => {
                 Sauce.deleteOne({_id: req.params.id})
                     .then(
                     () => {
+                        console.log('id:' + sauceToFind + ' deleted');
                         res.status(200).json({
                             message: 'Deleted!'
                         });
                     }
                 )
-                .then(console.log('id:' + req.params.id + ' deleted'))
                 .catch(
                 (error) => {
                     res.status(400).json({
@@ -171,7 +159,7 @@ exports.deleteSauce = (req, res, next) => {
     );
 };
 
-exports.getAllSauce = (req, res, next) => {
+exports.getAllSauce = (req, res) => {
   Sauce.find().then(
     (sauces) => {
       res.status(200).json(sauces);
@@ -185,10 +173,10 @@ exports.getAllSauce = (req, res, next) => {
   );
 };
 
-exports.likeSauce = async (req, res, next) => {
+exports.likeSauce = async (req, res) => {
     try {
         let sauceToFind
-        if (isValid(req.params.id)) {
+        if (validationFunction.isValid(req.params.id)) {
             sauceToFind = req.params.id
         }
         const foundSauce = await Sauce.findOne({
