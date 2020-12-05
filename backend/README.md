@@ -3,6 +3,10 @@ Both frontend and backend folders need 'npm install' on them
 Run 'npm start' on frontend folder
 Run 'nodemon server' on backend folder
 
+To connect to your MongoDB account, please change the filename '.envSetup' to '.env'
+Then add your login details inside the inverted commas.
+It should look something like this: 'mongodb+srv://YOURUSERNAME:YOURPASSWORD@cluster0.wmkgs.mongodb.net/<cluster0>?retryWrites=true&w=majority'
+
 Installed packages for backend folder
 - npm install -g nodemon (nodemon server - pt1, ch2)
 - npm install --save express (pt1, ch3)

@@ -3,11 +3,12 @@ const app = express();
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const path = require('path');
+require('dotenv').config()
 
 const sauceRoutes = require('./routes/sauce');
 const userRoutes = require('./routes/user');
 
-mongoose.connect('mongodb+srv://joe:test12345@cluster0.wmkgs.mongodb.net/<cluster0>?retryWrites=true&w=majority')
+mongoose.connect(process.env.MONGO_DB_LOGIN)
   .then(() => {
     console.log('Successfully connected to MongoDB Atlas!');
   })
